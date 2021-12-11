@@ -1,6 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
   <div class="content">
-  {{docs|markdown}}
+    <!-- {{docs|markdown}} -->
+    <div id="repo_search_container">
+      <div id="repo_search_form_container">
+        <form id="repo_search_form">
+          <label for="repo_input">Repo:</label>
+          <input type="text" id="repo_input" name="repo_input">
+          <input type="button" id="repo_search_submit" value="Search">
+        </form>
+      </div>
+      <div id="repo_search_results_container"></div>
+    </div>
   </div>
 {% endblock %}
