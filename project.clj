@@ -4,6 +4,7 @@
   :url "http://example.com/FIXME"
 
   :dependencies [[ch.qos.logback/logback-classic "1.2.7"]
+                 [clj-http "0.7.7"]
                  [clojure.java-time "0.3.3"]
                  [cprop "0.1.19"]
                  [expound "0.8.10"]
@@ -27,6 +28,7 @@
                  [org.webjars/webjars-locator-jboss-vfs "0.1.0"]
                  [ring-webjars "0.2.0"]
                  [ring/ring-core "1.9.4"]
+                 [ring/ring-codec "1.2.0"]
                  [ring/ring-defaults "0.3.3"]
                  [selmer "1.12.45"]]
 
