@@ -2,10 +2,38 @@
   (:require
    [take-home.layout :as layout]
    [take-home.git-get :as gg]
-   [clojure.java.io :as io]
    [take-home.middleware :as middleware]
+   [clojure.java.io :as io]
+   [markdown.core :refer [md-to-html-string]]
    [ring.util.response]
    [ring.util.http-response :as response]))
+
+(defn drop-leading-colon [s]
+  (if (= (first s) \:)
+    (apply str (drop 1 s))
+    s))
+
+;; NOTE:
+;; maybe better is this functionality as a middleware
+(defn keys-to-js-keys [m]
+  (into {}
+        (map
+         (fn [[k v]]
+           [(keyword
+             (clojure.string/replace
+              (drop-leading-colon (str k)) "-" "_"))
+            v])
+         m)))
+
+(defn transform-value [transformer key m]
+  (into {}
+        (map
+         (fn [[k v]]
+           (if (= k key)
+             [k
+              (transformer v)]
+             [k v]))
+         m)))
 
 (defn repo-search [req]
   ;;TODO:
@@ -20,8 +48,7 @@
     (let [repo-name (:repo_name (:params req))]
       (if (gg/repo-exists? repo-name)
         (let [search-result (gg/search-repos-and-get-top-hit repo-name)]
-          (println search-result)
-          (response/ok {:body {:data search-result
+          (response/ok {:body {:data (keys-to-js-keys search-result)
                                :success true
                                :message "success"}}))))))
 
@@ -41,7 +68,9 @@
                  :message "Repository missing owner or name."}})
         (let [release (gg/get-latest-release repo)]
           (response/ok
-           {:body {:data release
+           {:body {:data (->> release
+                              (transform-value md-to-html-string :release-notes)
+                              keys-to-js-keys)
                    :success true
                    :message "success"}}))))))
 
