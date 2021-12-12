@@ -38,9 +38,18 @@ body {
     flex-direction: column;
 }
 
-#repo_search_container {
+#repo_search_refresh_container {
+    display: flex;
     margin-top: 5%;
     margin-left: 15%;
+}
+
+#repo_search_form_container {
+    width: 100%;
+}
+
+#repo_refresh_container {
+    width: 50%;
 }
 
 #repos_container {
@@ -102,4 +111,8 @@ body {
 
 .new_repo {
     background-color: lightgreen;
+}
+
+.selected_repo {
+    border: 2px solid black;
 }

@@ -2,26 +2,41 @@ $(document).ready(function () {
   localStorage.repos = JSON.stringify([]);
   localStorage.current_release_notes_repo_name = '';
 
+  $("#repo_refresh_button").click(function (e) {
+    console.log("repo_refresh_button clicked");
+    // get the list of current repo names
+    // send them to /api and get latest releases for all
+    // for each latest release that is more recent that current:
+    //   put new_repo class on its repo_entry_container
+    //   update the date
+    // blow out displayed release_notes if they have been updated.
+  });
+
   function set_repo_entry_click_events() {
     $(".repo_entry").click(function (e) {
-      var self = this;
-      var repo_name = $(self).find(".repo_name_container").text().trim().split('/')[1] || '';
+      var repo_name = $(this).find(".repo_name_container").text().trim().split('/')[1] || '';
       if (!(localStorage.current_release_notes_repo_name == repo_name)) {
         var repo = get_from_repo_cache(repo_name);
         set_release_notes(repo.release_notes);
         localStorage.current_release_notes_repo_name = repo_name;
       }
 
-      $(self).removeClass('new_repo');
+      $(this).removeClass('new_repo');
+      $('.repo_entry').removeClass('selected_repo');
+      $(this).addClass('selected_repo');
     });
 
     $(".repo_remove_container").click(function (e) {
       console.log("repo_remove_container clicked");
-      // get repo name
-      // if == localStorage.current_release_notes_repo_name
-      // $("#repo_release_notes_container").html('');
-      //$(this).parent().remove();
-      // remove it from cache.
+      var repo_name = $(this).parent().find(".repo_name_container").text().trim().split('/')[1] || '';
+      if (repo_name != '') {
+        if (localStorage.current_release_notes_repo_name == repo_name) {
+          $("#repo_release_notes_container").html('');
+        }
+
+        $(this).parent().remove();
+        delete_from_repo_cache(repo_name);
+      }
     });
   }
 

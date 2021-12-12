@@ -1,13 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
   <div class="content">
-    <div id="repo_search_container">
+    <div id="repo_search_refresh_container">
       <div id="repo_search_form_container">
         <form id="repo_search_form">
           <label for="repo_input">Repo:</label>
           <input type="text" id="repo_input" name="repo_input">
           <input type="button" id="repo_search_submit" value="Add">
         </form>
+      </div>
+      <div id="repo_refresh_container">
+        <button id="repo_refresh_button">Refresh Repos</button>
       </div>
     </div>
     <div id="repos_detail_container">
