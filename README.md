@@ -37,6 +37,8 @@ To start a web server for the application, run:
 $ lein run 
 ```
 
+Visit localhost:3000 in a web browser.
+
 ## TODO
 - [ ] More end to end testing
 - [ ] More unit tests
