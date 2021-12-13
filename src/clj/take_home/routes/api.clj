@@ -74,8 +74,31 @@
                    :success true
                    :message "success"}}))))))
 
+(defn get-update-repos [repos]
+  (map (fn [repo]
+         (merge {:name (:name repo), :owner (:owner repo)}
+                (keys-to-js-keys (gg/get-latest-release repo))))
+       (into [] (map (fn [[k v]] v) repos))))
+
+(defn repo-releases [req]
+  ;; TODO:
+  ;; I feel like I shouldn't be typing this again.
+  ;; ask how not!
+  (if (not (and (contains? req :params)
+                (contains? (:params req) :repos)))
+    (response/ok
+     {:body {:data nil
+             :success false
+             :message "Bad data received."}})
+    (let [repos (:repos (:params req))]
+      (response/ok
+       {:body {:data (get-update-repos repos)
+               :success true
+               :message "success"}}))))
+
 (defn api-routes []
   [ ""
    {:middleware [middleware/wrap-formats]}
    ["/api/repo/search" {:get repo-search}]
-   ["/api/repo/release" {:get repo-release}]])
+   ["/api/repo/release" {:get repo-release}]
+   ["/api/repo/releases" {:get repo-releases}]])
