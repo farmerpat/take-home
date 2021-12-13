@@ -19,7 +19,7 @@ Unseen repositories have a green background and clicking a repository in the lis
 will mark it as seen and display its release notes in the div beside the repo list.
 Clicking the "X" next to a repository in the list will remove it from the list and
 clear the release notes if applicable.
-The "Refresh Repos" asks for the latest release for each listed repo and the intent
+The "Refresh Repos" button asks for the latest release for each listed repo and the intent
 is that results with newer release dates are reflected in the UI as per the AC.
 It may work, but the only tests I've run so far were for stale releases.
 
