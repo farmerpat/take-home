@@ -35,12 +35,19 @@
              [k v]))
          m)))
 
+(defn contains-all? [m ks]
+  (every? (fn [k] (contains? m k)) ks))
+
+(defn valid-request?
+  ([req] (contains? req :params))
+  ([req ks]
+   (and (contains? req :params)
+        (if (sequential? ks)
+          (contains-all? (:params req) ks)
+          (contains? (:params req) ks)))))
+
 (defn repo-search [req]
-  ;;TODO:
-  ;;...Why not some nested map key presence predicate?
-  ;;...Find and use or write.
-  (if (not (and (contains? req :params)
-                (contains? (:params req) :repo_name)))
+  (if (not (valid-request? req :repo_name))
     (response/ok
      {:body {:data nil
              :success false
@@ -53,15 +60,13 @@
                                :message "success"}}))))))
 
 (defn repo-release [req]
-  (if (not (and (contains? req :params)
-                (contains? (:params req) :repo)))
+  (if (not (valid-request? req :repo))
     (response/ok
      {:body {:data nil
              :success false
              :message "Bad data received."}})
     (let [repo (:repo (:params req))]
-      (if (not (and (contains? repo :name)
-                    (contains? repo :owner)))
+      (if (not (contains-all? repo [:name :owner]))
         (response/ok
          {:body {:data nil
                  :success false
@@ -80,12 +85,8 @@
                 (keys-to-js-keys (gg/get-latest-release repo))))
        (into [] (map (fn [[k v]] v) repos))))
 
-(defn repo-releases [req]
-  ;; TODO:
-  ;; I feel like I shouldn't be typing this again.
-  ;; ask how not!
-  (if (not (and (contains? req :params)
-                (contains? (:params req) :repos)))
+(defn repos-releases [req]
+  (if (not (valid-request? req :repos))
     (response/ok
      {:body {:data nil
              :success false
@@ -96,9 +97,25 @@
                :success true
                :message "success"}}))))
 
+(defn repo-earliest-release [req]
+  (if (or (not (valid-request? req :repo))
+          (not (contains-all? (:repo (:params req)) [:name :owner])))
+    (response/ok
+     {:body {:data nil
+             :success false
+             :message "Bad data received."}})
+    (let [releases (gg/get-releases (:repo (:params req)))]
+      (if (nil? releases)
+        (response/ok {:body {:data [] :success false :message "No releases found"}})
+        (response/ok
+         {:body {:data (last releases)
+                 :success true
+                 :message "success"}})))))
+
 (defn api-routes []
   [ ""
    {:middleware [middleware/wrap-formats]}
    ["/api/repo/search" {:get repo-search}]
    ["/api/repo/release" {:get repo-release}]
-   ["/api/repo/releases" {:get repo-releases}]])
+   ["/api/repo/release/earliest" {:get repo-earliest-release}]
+   ["/api/repos/release" {:get repos-releases}]])

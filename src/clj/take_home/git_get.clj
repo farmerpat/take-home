@@ -6,6 +6,10 @@
 
 (def BASE-URI "https://api.github.com")
 
+(defn well-formed-repo? [repo]
+  (and (contains? repo :owner)
+       (contains? repo :name)))
+
 ;; TODO: proper logging/handling e.g. returning error info
 (defn get-it
   ([] (get-it [] ""))
@@ -67,8 +71,7 @@
    Upon success, returns a map with :release-notes and :release-date
    Upon failure, returns nil"
   [repo]
-  (if (not (and (contains? repo :owner)
-                (contains? repo :name)))
+  (if (not (well-formed-repo? repo))
     nil
     (let [res (get-it ["repos" (:owner repo) (:name repo) "releases" "latest"])]
       (if (or (not (contains? res :body))
@@ -79,5 +82,14 @@
           {:release-notes release-notes
            :release-date release-date})))))
 
-;; e.g.
-;; (get-latest-release (search-repos-and-get-top-hit "vscode"))
+;; get all the releases...to get the first for testing refresh...
+;; stick a radio button next to the form...or hide one somewhere
+;; (default?) seems to only go back one year but perhaps it maxes out
+;; at 30 (e.g. microsoft/vscode
+(defn get-releases [repo]
+  (if (not (well-formed-repo? repo))
+    nil
+    (let [res (get-it ["repos" (:owner repo) (:name repo) "releases"])]
+      (if (not (contains? res :body))
+        nil
+        (:body res)))))

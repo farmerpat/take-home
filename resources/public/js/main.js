@@ -9,7 +9,7 @@ $(document).ready(function () {
 
     $.ajax({
       method: "get",
-      url: "/api/repo/releases",
+      url: "/api/repos/release",
       contentType: "json",
       dataType: "json",
       data: {
