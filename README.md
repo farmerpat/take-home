@@ -1,6 +1,6 @@
 # take-home
 
-The take-home exercise.
+The take-home exercise. It's a Luminus app with jQuery covering the front end.
 
 ## Prerequisites
 
@@ -17,4 +17,10 @@ $ lein run
 ```
 
 ## TODO
-Write it!
+[ ] More end to end testing
+[ ] More unit tests
+[-] Front-End MVP
+    [x] Allow repository removal
+    [ ] Allow repository refresh
+[ ] Refactor backend where applicable?
+[ ] Clean up
