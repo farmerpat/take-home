@@ -17,10 +17,10 @@ $ lein run
 ```
 
 ## TODO
-[ ] More end to end testing
-[ ] More unit tests
-[-] Front-End MVP
-    [x] Allow repository removal
-    [ ] Allow repository refresh
-[ ] Refactor backend where applicable?
-[ ] Clean up
+-[ ] More end to end testing
+-[ ] More unit tests
+-[ ] Front-End MVP
+    -[x] Allow repository removal
+    -[ ] Allow repository refresh
+-[ ] Refactor backend where applicable?
+-[ ] Clean up
