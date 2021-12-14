@@ -4,7 +4,6 @@ $(document).ready(function () {
 
   $("#repo_refresh_button").click(function (e) {
     var cache = get_cache();
-    // get the list of current repo names
     var repos = cache.map(function (r) { return {name: r.name, owner: r.owner};});
 
     $.ajax({
@@ -24,7 +23,7 @@ $(document).ready(function () {
           var new_release_date = new Date(new_release.release_date);
 
           $(cache).each(function(j, cached) {
-            if (cached.name == name) {
+            if (cached.name == new_name) {
               var cached_date = new Date(cached.release_date);
               // if we have something to update
               if (new_release_date.getTime() > cached_date.getTime()) {
@@ -34,7 +33,7 @@ $(document).ready(function () {
 
                 mark_repo_as_new(new_name);
                 update_repo_date(new_name, new_release_date);
-                update_repo_in_repo_cache(new_release);
+                update_existing_repo(new_release);
               }
             }
           });
@@ -78,6 +77,7 @@ $(document).ready(function () {
   function set_repo_entry_click_events() {
     $(".repo_entry").click(function (e) {
       var repo_name = $(this).find(".repo_name_container").text().trim().split('/')[1] || '';
+
       if (!(localStorage.current_release_notes_repo_name == repo_name)) {
         var repo = get_from_repo_cache(repo_name);
         set_release_notes(repo.release_notes);
@@ -157,10 +157,11 @@ $(document).ready(function () {
     save_cache(cache);
   }
 
-  function update_repo_in_repo_cache(repo, cache) {
+  function update_existing_repo(repo, cache) {
     cache = cache || get_cache();
     if (search_repo_cache(repo.name, cache)) {
       delete_from_repo_cache(repo.name);
+      cache = get_cache();
     }
 
     add_repo_to_repo_cache(repo, cache);
@@ -171,7 +172,7 @@ $(document).ready(function () {
     var current_repos = get_cache();
 
     if (search_repo_cache(name, current_repos)) {
-      update_repo_in_repo_cache(repo);
+      update_existing_repo(repo);
     } else {
       add_repo_to_repo_cache(repo);
     }
@@ -196,10 +197,6 @@ $(document).ready(function () {
       return;
     }
 
-    // This should probably happen in the back-end,
-    // but where's the best place for it?
-    // another route to be called from FE?
-    // in the api route itself?
     var html = `
 <div class="repo_entry_container">
         <div class="repo_entry new_repo">
@@ -219,10 +216,62 @@ $(document).ready(function () {
     set_repo_entry_click_events();
   }
 
-  function perform_repo_search (repo_name, callback) {
+  // TODO: exactly the same as the fn below sans last part of url path.
+  // abstract away.
+  function get_repo_release_earliest(repo, callback) {
+    callback = callback || function (x) {};
+
+    $.ajax({
+      method: "get",
+      url: "/api/repo/release/earliest",
+      contentType: "json",
+      dataType: "json",
+      data: {
+        repo: repo
+
+      },
+      success: function (release_data) {
+        release_data = release_data && release_data.body && release_data.body.data;
+        if (release_data && release_data.release_notes && release_data.release_notes) {
+          callback(Object.assign(repo, release_data));
+
+        }
+      },
+      error:function (jqxhr, textStatus, error) {
+        console.log("erra, erra: " + error);
+
+      }
+    });
+  }
+
+  function get_repo_release_latest(repo, callback) {
     callback = callback || function(d) {};
 
-    //var repo_name = $("#repo_input").val();
+    $.ajax({
+      method: "get",
+      url: "/api/repo/release/latest",
+      contentType: "json",
+      dataType: "json",
+      data: {
+        repo: repo
+
+      },
+      success: function (release_data) {
+        release_data = release_data && release_data.body && release_data.body.data;
+        if (release_data && release_data.release_notes && release_data.release_notes) {
+          callback(Object.assign(repo, release_data));
+
+        }
+      },
+      error:function (jqxhr, textStatus, error) {
+        console.log("erra, erra: " + error);
+
+      }
+    });
+  }
+
+  function perform_repo_search (repo_name, callback) {
+    callback = callback || function(d) {};
 
     if (repo_name != '') {
       $.ajax({
@@ -238,31 +287,9 @@ $(document).ready(function () {
 
           if (search_data && search_data.body && search_data.body.data) {
             repo = search_data.body.data;
-
-            // TODO:
-            // probably combine these into one api call
-            $.ajax({
-              method: "get",
-              url: "/api/repo/release",
-              contentType: "json",
-              dataType: "json",
-              data: {
-                repo: repo
-
-              },
-              success: function (release_data) {
-                release_data = release_data && release_data.body && release_data.body.data;
-                if (release_data && release_data.release_notes && release_data.release_notes) {
-                  callback(Object.assign(repo, release_data));
-
-                }
-              },
-              error:function (jqxhr, textStatus, error) {
-                console.log("erra, erra: " + error);
-
-              }
-            });
           }
+          callback(repo);
+
         },
         error: function (jqxhr, textStatus, error) {
           console.log("erra: " + error);
@@ -274,17 +301,42 @@ $(document).ready(function () {
 
   $("#repo_search_form").submit(false);
 
+  $("#repo_get_older_release").click(function () {
+    var repo_name = $("#repo_input").val().trim();
+
+    if (repo_name != '') {
+      if (search_repo_cache(repo_name)) {
+        // TODO:
+        // just "update" it to earler?
+
+      } else {
+        perform_repo_search(repo_name, function (repo) {
+          get_repo_release_earliest(repo, function (repo_and_release) {
+            update_repo_cache(repo_and_release);
+            update_repo_list(repo_and_release);
+            $("#repo_input").val('');
+
+          });
+        });
+      }
+    }
+  });
+
   $("#repo_search_submit").click(function () {
     var repo_name = $("#repo_input").val().trim();
 
     if (search_repo_cache(repo_name)) {
       // TODO:
       // may want to do something (e.g. notify user)
+
     } else {
       perform_repo_search(repo_name, function (repo) {
-        update_repo_cache(repo);
-        update_repo_list(repo);
-        $("#repo_input").val('');
+        get_repo_release_latest(repo, function (repo_and_release) {
+          update_repo_cache(repo_and_release);
+          update_repo_list(repo_and_release);
+          $("#repo_input").val('');
+
+        });
       });
     }
   });

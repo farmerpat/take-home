@@ -59,7 +59,29 @@
                                :success true
                                :message "success"}}))))))
 
-(defn repo-release [req]
+;; TODO
+;; almost exactly the same as repo-release-latest
+;; factor it out!
+(defn repo-release-earliest [req]
+  (if (not (and (valid-request? req :repo)
+                (contains-all? (:repo (:params req)) [:name :owner])))
+    (response/ok
+     {:body {:data nil
+             :success false
+             :message "Bad data received."}})
+    (let [releases (gg/get-releases (:repo (:params req)))]
+      (if (nil? releases)
+        (response/ok {:body {:data [] :success false :message "No releases found"}})
+        (let [oldest_release (last releases)]
+          (response/ok
+           {:body {:data (->> {:release-date (:published_at oldest_release)
+                               :release-notes (:body oldest_release)}
+                              (transform-value md-to-html-string :release-notes)
+                              keys-to-js-keys)
+                   :success true
+                   :message "success"}}))))))
+
+(defn repo-release-latest [req]
   (if (not (valid-request? req :repo))
     (response/ok
      {:body {:data nil
@@ -82,10 +104,12 @@
 (defn get-update-repos [repos]
   (map (fn [repo]
          (merge {:name (:name repo), :owner (:owner repo)}
-                (keys-to-js-keys (gg/get-latest-release repo))))
+                (->> (gg/get-latest-release repo)
+                     (transform-value md-to-html-string :release-notes)
+                     keys-to-js-keys)))
        (into [] (map (fn [[k v]] v) repos))))
 
-(defn repos-releases [req]
+(defn repos-release [req]
   (if (not (valid-request? req :repos))
     (response/ok
      {:body {:data nil
@@ -97,25 +121,10 @@
                :success true
                :message "success"}}))))
 
-(defn repo-earliest-release [req]
-  (if (or (not (valid-request? req :repo))
-          (not (contains-all? (:repo (:params req)) [:name :owner])))
-    (response/ok
-     {:body {:data nil
-             :success false
-             :message "Bad data received."}})
-    (let [releases (gg/get-releases (:repo (:params req)))]
-      (if (nil? releases)
-        (response/ok {:body {:data [] :success false :message "No releases found"}})
-        (response/ok
-         {:body {:data (last releases)
-                 :success true
-                 :message "success"}})))))
-
 (defn api-routes []
   [ ""
    {:middleware [middleware/wrap-formats]}
    ["/api/repo/search" {:get repo-search}]
-   ["/api/repo/release" {:get repo-release}]
-   ["/api/repo/release/earliest" {:get repo-earliest-release}]
-   ["/api/repos/release" {:get repos-releases}]])
+   ["/api/repo/release/latest" {:get repo-release-latest}]
+   ["/api/repo/release/earliest" {:get repo-release-earliest}]
+   ["/api/repos/release" {:get repos-release}]])

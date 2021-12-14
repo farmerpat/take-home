@@ -21,19 +21,12 @@
          (cond 
            (not (= 200 (:status res))) nil
            :else res))
-       ;; if the request bombs, just return nil
        (catch Exception e nil)))))
 
-;; e.g.
-;; (build-search-query-string ["foo" "is" "the" "search" "term"])
-;; -> "?q=foo%20is%20the%20searc%20term"
 (defn build-search-query-string [search-terms]
   (str "?q=" (ruc/url-encode (string/join " " search-terms))))
 
 (defn repo-exists? [repo-name]
-  ;; TODO
-  ;; ultimately either prevent spaces in form input
-  ;; also code the api to handle input with spaces?
   (let [res (get-it ["search" "repositories" ] (build-search-query-string [repo-name]))]
     (cond (nil? res) false
           (not (contains? res :body)) false
@@ -78,14 +71,10 @@
               (not (contains? (:body res) :body)))
         nil
         (let [release-notes (:body (:body res))
-              release-date (:created_at (:body res))]
+              release-date (:published_at (:body res))]
           {:release-notes release-notes
            :release-date release-date})))))
 
-;; get all the releases...to get the first for testing refresh...
-;; stick a radio button next to the form...or hide one somewhere
-;; (default?) seems to only go back one year but perhaps it maxes out
-;; at 30 (e.g. microsoft/vscode
 (defn get-releases [repo]
   (if (not (well-formed-repo? repo))
     nil
