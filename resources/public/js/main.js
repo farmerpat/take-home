@@ -53,8 +53,6 @@ $(document).ready(function () {
 
   function mark_repo_as_new(name) {
     $(".repo_entry").each(function (i, elt) {
-      // TODO
-      // this pattern is everywhere...there ought to be a better way
       var repo_name = $(this).find(".repo_name_container").text().trim().split('/')[1] || '';
       if (repo_name == name) {
         $(this).removeClass('new_repo');
@@ -189,9 +187,6 @@ $(document).ready(function () {
     $("#repo_release_notes_container").html(rn);
   }
 
-  // TODO:
-  // This fn should not create the html, it should use it...
-  // e.g. pass it in!
   function update_repo_list(repo) {
     if (! (repo.release_date && repo.release_notes)) {
       return;
@@ -216,40 +211,12 @@ $(document).ready(function () {
     set_repo_entry_click_events();
   }
 
-  // TODO: exactly the same as the fn below sans last part of url path.
-  // abstract away.
-  function get_repo_release_earliest(repo, callback) {
+  function get_repo_release(repo, which, callback) {
     callback = callback || function (x) {};
 
     $.ajax({
       method: "get",
-      url: "/api/repo/release/earliest",
-      contentType: "json",
-      dataType: "json",
-      data: {
-        repo: repo
-
-      },
-      success: function (release_data) {
-        release_data = release_data && release_data.body && release_data.body.data;
-        if (release_data && release_data.release_notes && release_data.release_notes) {
-          callback(Object.assign(repo, release_data));
-
-        }
-      },
-      error:function (jqxhr, textStatus, error) {
-        console.log("erra, erra: " + error);
-
-      }
-    });
-  }
-
-  function get_repo_release_latest(repo, callback) {
-    callback = callback || function(d) {};
-
-    $.ajax({
-      method: "get",
-      url: "/api/repo/release/latest",
+      url: "/api/repo/release/" + which,
       contentType: "json",
       dataType: "json",
       data: {
@@ -311,7 +278,7 @@ $(document).ready(function () {
 
       } else {
         perform_repo_search(repo_name, function (repo) {
-          get_repo_release_earliest(repo, function (repo_and_release) {
+          get_repo_release(repo, "earliest", function (repo_and_release) {
             update_repo_cache(repo_and_release);
             update_repo_list(repo_and_release);
             $("#repo_input").val('');
@@ -325,13 +292,9 @@ $(document).ready(function () {
   $("#repo_search_submit").click(function () {
     var repo_name = $("#repo_input").val().trim();
 
-    if (search_repo_cache(repo_name)) {
-      // TODO:
-      // may want to do something (e.g. notify user)
-
-    } else {
+    if (!search_repo_cache(repo_name)) {
       perform_repo_search(repo_name, function (repo) {
-        get_repo_release_latest(repo, function (repo_and_release) {
+        get_repo_release(repo, "latest", function (repo_and_release) {
           update_repo_cache(repo_and_release);
           update_repo_list(repo_and_release);
           $("#repo_input").val('');
