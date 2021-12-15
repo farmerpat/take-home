@@ -25,6 +25,8 @@
             v])
          m)))
 
+;; Is there a better way to do this?
+;; ASK!
 (defn transform-value [transformer key m]
   (into {}
         (map
@@ -59,9 +61,6 @@
                                :success true
                                :message "success"}}))))))
 
-;; TODO
-;; almost exactly the same as repo-release-latest
-;; factor it out!
 (defn repo-release-earliest [req]
   (if (not (and (valid-request? req :repo)
                 (contains-all? (:repo (:params req)) [:name :owner])))
