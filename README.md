@@ -10,11 +10,14 @@ You will need [Leiningen][1] 2.0 or above installed.
 
 [1]: https://github.com/technomancy/leiningen
 
+Also, npm.
+
 ## Running
 
-To start a web server for the application, run:
+    npm install -g shadow-cljs
+    lein run
+    shadow-cljs watch app
 
-    lein run 
 
 ## License
 

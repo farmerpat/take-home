@@ -4,7 +4,9 @@
   :url "http://example.com/FIXME"
 
   :dependencies [[ch.qos.logback/logback-classic "1.2.7"]
+                 [clj-http "0.7.7"]
                  [cljs-ajax "0.8.4"]
+                 [com.andrewmcveigh/cljs-time "0.5.2"]
                  [clojure.java-time "0.3.3"]
                  [com.cognitect/transit-clj "1.0.324"]
                  [com.cognitect/transit-cljs "0.8.269"]
@@ -27,14 +29,17 @@
                  [org.clojure/core.async "1.5.648"]
                  [org.clojure/tools.cli "1.0.206"]
                  [org.clojure/tools.logging "1.1.0"]
+                 [org.clojure/tools.reader "1.3.6"]
                  [org.webjars.npm/bulma "0.9.3"]
                  [org.webjars.npm/material-icons "1.0.0"]
                  [org.webjars/webjars-locator "0.42"]
                  [org.webjars/webjars-locator-jboss-vfs "0.1.0"]
                  [re-frame "1.2.0"]
+                 ;[day8.re-frame/re-frame-10x "1.2.0"]
                  [reagent "1.1.0"]
                  [ring-webjars "0.2.0"]
                  [ring/ring-core "1.9.4"]
+                 [ring/ring-codec "1.2.0"]
                  [ring/ring-defaults "0.3.3"]
                  [selmer "1.12.45"]
                  [thheller/shadow-cljs "2.16.7" :scope "provided"]]
@@ -46,6 +51,7 @@
   :resource-paths ["resources" "target/cljsbuild"]
   :target-path "target/%s/"
   :main ^:skip-aot take-home.core
+  ;;:optimizations :none
 
   :plugins [] 
   :clean-targets ^{:protect false}
@@ -66,6 +72,8 @@
 
    :project/dev  {:jvm-opts ["-Dconf=dev-config.edn" ]
                   :dependencies [[binaryage/devtools "1.0.4"]
+                                 [day8.re-frame/tracing      "0.6.2"]
+                                 ;[day8.re-frame/re-frame-10x "1.2.0"]
                                  [cider/piggieback "0.5.3"]
                                  [org.clojure/tools.namespace "1.1.1"]
                                  [pjstadig/humane-test-output "0.11.0"]
