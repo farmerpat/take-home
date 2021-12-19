@@ -14,69 +14,28 @@
  (fn [_ _]
    db/default-db))
 
-(rf/reg-event-fx
- :repo-search-success
- (fn
-   [{:keys [db]} [_ res]]
-   {:dispatch [:get-latest-release (get res "owner") (get res "name")]}))
-
-;; (rf/reg-event-fx
-;;  :latest-release-got
-;;  (fn [{:keys [db]} [_ res]]
-;;    (let [release-notes (get res "release-notes")
-;;          release-date (get res "release-date")
-;;          name (get res "name")
-;;          owner (get res "owner")]
-;;      {:db (update-in db [:repos] conj {:release-notes release-notes
-;;                                         :release-date (tfc/from-string release-date)
-;;                                         :owner owner
-;;                                         :name name
-;;                                         :seen false})})))
-
-(rf/reg-event-db
- :latest-release-got
- (fn [db [_ res]]
-   (let [release-notes (get res "release-notes")
-         release-date (get res "release-date")
-         name (get res "name")
-         owner (get res "owner")]
-     ;; (clj->js (println res))
-     ;; (clj->js (println name))
-     ;; (clj->js (println owner))
-     ;; (clj->js (println release-date))
-     (update-in db [:repos] conj {:release-notes release-notes
-                                  :release-date (tfc/from-string release-date)
-                                  :owner owner
-                                  :name name
-                                  :seen false}))))
-
-;; TODO:
-;; one of these search events felt redundant at some point yesterday...
-;; rm if applicable
-
-(rf/reg-event-fx
- :get-latest-release
- (fn [{:keys [db]} [_ owner name]]
-   {:http-xhrio {:method :get
-                 :uri "/api/repo/release/latest"
-                 :params {:name name :owner owner}
-                 :request-format (ajax/json-request-format)
-                 :response-format (ajax/json-response-format {:keywords true})
-                 :on-success [:latest-release-got]
-                 :on-failure [:search-failure]}}))
-
 (rf/reg-event-db
  :search-failure
  (fn [db [_ _]]
    (js/console.log "FAILURE!")
    db))
 
+(rf/reg-event-db
+ :repo-search-success
+ (fn
+   [db [_ res]]
+   (update-in db [:repos] conj {:release-notes (get res "release-notes")
+                                :release-date (tfc/from-string (get res "release-date"))
+                                :owner (get res "owner")
+                                :name (get res "name")
+                                :seen false})))
+
 (rf/reg-event-fx
  :submit-search
  (fn
-   [_ [_ repo-name]]
+   [{:keys [db]} [_ repo-name]]
    {:http-xhrio {:method :get
-                 :uri "/api/repo/search"
+                 :uri "/api/repo/searchfull"
                  :params {:repo-name repo-name}
                  :request-format (ajax/json-request-format)
                  :response-format (ajax/json-response-format {:keywords true})

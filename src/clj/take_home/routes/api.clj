@@ -48,6 +48,19 @@
           (contains-all? (:params req) ks)
           (contains? (:params req) ks)))))
 
+(defn repo-search-full [req]
+  (if (not (valid-request? req :repo-name))
+    (response/ok {})
+    (let [repo-name (:repo-name (:params req))]
+      (if (gg/repo-exists? repo-name)
+        (let [search-result (gg/search-repos-and-get-top-hit repo-name)]
+          (if (not (contains-all? search-result [:owner :name]))
+            (response/ok {})
+            (let [release (gg/get-latest-release search-result)]
+              (response/ok
+               (merge (transform-value md-to-html-string :release-notes release)
+                      search-result)))))))))
+
 (defn repo-search [req]
   (if (not (valid-request? req :repo-name))
     (response/ok
@@ -121,6 +134,7 @@
   [ ""
    {:middleware [middleware/wrap-formats]}
    ["/api/repo/search" {:get repo-search}]
+   ["/api/repo/searchfull" {:get repo-search-full}]
    ["/api/repo/release/latest" {:get repo-release-latest}]
    ["/api/repo/release/earliest" {:get repo-release-earliest}]
    ["/api/repos/release" {:get repos-release}]])

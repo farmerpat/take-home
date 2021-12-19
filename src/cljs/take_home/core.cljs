@@ -29,38 +29,15 @@
                  (rf/dispatch [:submit-search @repo-name]))}
     "Search"]])
 
-;; (defn repo-list []
-;;   (let [repos @(rf/subscribe [:repo-list])]
-;;     (println "after repo-list let")
-;;     (clj->js (println repos))
-;;     (fn []
-;;       ;; then foreach repo add it to the div or what not
-;;       ;;(println "i r repo-list with repos")
-;;       [:div
-;;        [:h1 "Repo List"]
-;;        [:ul
-;;         (map (fn [{:keys [release-date name owner]}]
-;;                [:li {:key name} (str owner "/" name)])
-;;              repos)]])))
-
+;; Fixed by dereferencing subscription outside of let...?
 (defn repo-list []
-  (let [repos @(rf/subscribe [:repo-list])]
-    (println "after repo-list let")
-    (clj->js (println repos))
+  (let [repos (rf/subscribe [:repo-list])]
     (fn []
-      ;; then foreach repo add it to the div or what not
-      ;;(println "i r repo-list with repos")
       [:div
        [:h1 "Repo List"]
-       (into [:ul] (map #(vector :li (str (:owner %) "/" (:name %))) repos))
-       ;; [:ul
-       ;;  (map (fn [{:keys [release-date name owner]}]
-       ;;         [:li {:key name} (str owner "/" name)])
-       ;;       repos)]
-       ])))
+       (into [:ul] (map #(vector :li (str (:owner %) "/" (:name %))) @repos))])))
 
 (defn home-page []
-  (println "i r home-page with repolists")
   [:section.section>div.container>div.content
    [text-input]
    [repo-list]])
