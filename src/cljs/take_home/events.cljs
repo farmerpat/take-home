@@ -12,28 +12,7 @@
 (rf/reg-event-db
  :init-db
  (fn [_ _]
-   (js/console.log "I R INIT DB!")
    db/default-db))
-
-;;dispatchers
-
-(rf/reg-event-db
-  :common/navigate
-  (fn [db [_ match]]
-    (let [old-match (:common/route db)
-          new-match (assoc match :controllers
-                                 (rfc/apply-controllers (:controllers old-match) match))]
-      (assoc db :common/route new-match))))
-
-(rf/reg-fx
-  :common/navigate-fx!
-  (fn [[k & [params query]]]
-    (rfe/push-state k params query)))
-
-(rf/reg-event-fx
-  :common/navigate!
-  (fn [_ [_ url-key params query]]
-    {:common/navigate-fx! [url-key params query]}))
 
 (rf/reg-event-fx
  :repo-search-success
@@ -41,20 +20,35 @@
    [{:keys [db]} [_ res]]
    {:dispatch [:get-latest-release (get res "owner") (get res "name")]}))
 
-(rf/reg-event-fx
+;; (rf/reg-event-fx
+;;  :latest-release-got
+;;  (fn [{:keys [db]} [_ res]]
+;;    (let [release-notes (get res "release-notes")
+;;          release-date (get res "release-date")
+;;          name (get res "name")
+;;          owner (get res "owner")]
+;;      {:db (update-in db [:repos] conj {:release-notes release-notes
+;;                                         :release-date (tfc/from-string release-date)
+;;                                         :owner owner
+;;                                         :name name
+;;                                         :seen false})})))
+
+(rf/reg-event-db
  :latest-release-got
- (fn [{:keys [db]} [_ res]]
+ (fn [db [_ res]]
    (let [release-notes (get res "release-notes")
          release-date (get res "release-date")
          name (get res "name")
          owner (get res "owner")]
-     {:db (update-in db ["repos"] conj {:release-notes release-notes
-                                        :release-date (tfc/from-string release-date)
-                                        :owner owner
-                                        :name name
-                                        :seen false})
-      ;:dispatch [:home/repo-list]
-      })))
+     ;; (clj->js (println res))
+     ;; (clj->js (println name))
+     ;; (clj->js (println owner))
+     ;; (clj->js (println release-date))
+     (update-in db [:repos] conj {:release-notes release-notes
+                                  :release-date (tfc/from-string release-date)
+                                  :owner owner
+                                  :name name
+                                  :seen false}))))
 
 ;; TODO:
 ;; one of these search events felt redundant at some point yesterday...
@@ -85,7 +79,6 @@
                  :uri "/api/repo/search"
                  :params {:repo-name repo-name}
                  :request-format (ajax/json-request-format)
-                 ;; :response-format (ajax/json-response-format {:keywords true})
                  :response-format (ajax/json-response-format {:keywords true})
                  :on-success [:repo-search-success]
                  :on-failure [:search-failure]}}))
@@ -95,36 +88,10 @@
   (fn [db [_ error]]
     (assoc db :common/error error)))
 
-(rf/reg-event-fx
- :page/init-home
- (fn [_ _]
-   {}))
-
-;;subscriptions
-
 (rf/reg-sub
- ;;:home/repo-list
- :home/repo-list
+ :repo-list
  (fn [db _]
-   (println "I R home/repo-list")
-   (-> db :repos)))
-
-(rf/reg-sub
-  :common/route
-  (fn [db _]
-    (-> db :common/route)))
-
-(rf/reg-sub
-  :common/page-id
-  :<- [:common/route]
-  (fn [route _]
-    (-> route :data :name)))
-
-(rf/reg-sub
-  :common/page
-  :<- [:common/route]
-  (fn [route _]
-    (-> route :data :view)))
+   (:repos db)))
 
 (rf/reg-sub
   :common/error

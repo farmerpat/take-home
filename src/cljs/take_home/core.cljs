@@ -14,30 +14,9 @@
     [clojure.string :as string])
   (:import goog.History))
 
-(defn nav-link [uri title page]
-  [:a.navbar-item
-   {:href   uri
-    :class (when (= page @(rf/subscribe [:common/page-id])) :is-active)}
-   title])
-
-(defn navbar [] 
-  (r/with-let [expanded? (r/atom false)]
-              [:nav.navbar.is-info>div.container
-               [:div.navbar-brand
-                [:a.navbar-item {:href "/" :style {:font-weight :bold}} "take-home"]
-                [:span.navbar-burger.burger
-                 {:data-target :nav-menu
-                  :on-click #(swap! expanded? not)
-                  :class (when @expanded? :is-active)}
-                 [:span][:span][:span]]]
-               [:div#nav-menu.navbar-menu
-                {:class (when @expanded? :is-active)}
-                [:div.navbar-start
-                 [nav-link "#/" "Home" :home]]]]))
-
 (def repo-name (r/atom ""))
 
-(defn text-input [id]
+(defn text-input []
   [:div.repo-input
    [:label "Repo:"]
    [:input {:type "text"
@@ -50,17 +29,35 @@
                  (rf/dispatch [:submit-search @repo-name]))}
     "Search"]])
 
+;; (defn repo-list []
+;;   (let [repos @(rf/subscribe [:repo-list])]
+;;     (println "after repo-list let")
+;;     (clj->js (println repos))
+;;     (fn []
+;;       ;; then foreach repo add it to the div or what not
+;;       ;;(println "i r repo-list with repos")
+;;       [:div
+;;        [:h1 "Repo List"]
+;;        [:ul
+;;         (map (fn [{:keys [release-date name owner]}]
+;;                [:li {:key name} (str owner "/" name)])
+;;              repos)]])))
+
 (defn repo-list []
-  (let [repos @(rf/subscribe [:home/repo-list])]
+  (let [repos @(rf/subscribe [:repo-list])]
+    (println "after repo-list let")
+    (clj->js (println repos))
     (fn []
       ;; then foreach repo add it to the div or what not
-      (println "i r repo-list with repos")
+      ;;(println "i r repo-list with repos")
       [:div
        [:h1 "Repo List"]
-       [:ul
-        (map (fn [{:keys [release-date name owner]}]
-               [:li (str owner "/" name)])
-             repos)]])))
+       (into [:ul] (map #(vector :li (str (:owner %) "/" (:name %))) repos))
+       ;; [:ul
+       ;;  (map (fn [{:keys [release-date name owner]}]
+       ;;         [:li {:key name} (str owner "/" name)])
+       ;;       repos)]
+       ])))
 
 (defn home-page []
   (println "i r home-page with repolists")
@@ -68,35 +65,13 @@
    [text-input]
    [repo-list]])
 
-(defn page []
-  (if-let [page @(rf/subscribe [:common/page])]
-    [:div
-     [navbar]
-     [page]]))
-
-(defn navigate! [match _]
-  (rf/dispatch [:common/navigate match]))
-
-(def router
-  (reitit/router
-    [["/" {:name        :home
-           :view        #'home-page
-           :controllers [{:start (fn [_] (rf/dispatch [:page/init-home]))}]}]]))
-
-(defn start-router! []
-  (rfe/start!
-    router
-    navigate!
-    {}))
-
 ;; -------------------------
 ;; Initialize app
 (defn ^:dev/after-load mount-components []
   (rf/clear-subscription-cache!)
-  (rdom/render [#'page] (.getElementById js/document "app")))
+  (rdom/render [home-page] (.getElementById js/document "app")))
 
 (defn init! []
   (rf/dispatch-sync [:init-db])
-  (start-router!)
   (ajax/load-interceptors!)
   (mount-components))
