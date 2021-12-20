@@ -26,6 +26,14 @@
            :on-change #(reset! repo-name (.-value (.-target %)))
            :placeholder "Repo"}])
 
+(defn refresh-button []
+  [:button
+   {:id "repo_refresh_button"
+    :on-click (fn [e]
+                (.preventDefault e)
+                (rf/dispatch [:refresh-repos]))}
+   "Refresh"])
+
 (defn repo-add-button []
   [:button
    {:id "repo_search_submit"
@@ -98,7 +106,10 @@
      [:form#repo_search_form
       [:label {:for "repo_input"} "Repo:"]
       [text-input]
-      [repo-add-button]]]]
+      [repo-add-button]]]
+    [:div#repo_refresh_container
+     ;;[refresh-button]
+     ]]
    [repo-details-container]])
 
 ;; -------------------------

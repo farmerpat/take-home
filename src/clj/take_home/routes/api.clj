@@ -120,20 +120,15 @@
          (merge {:name (:name repo), :owner (:owner repo)}
                 (->> (gg/get-latest-release repo)
                      (transform-value md-to-html-string :release-notes)
-                     keys-to-js-keys)))
+                     ;;keys-to-js-keys
+                     )))
        (into [] (map (fn [[k v]] v) repos))))
 
 (defn repos-release [req]
-  (if (not (valid-request? req :repos))
+  (let [repos (:params req)]
+    (let [releases (get-update-repos repos)]
     (response/ok
-     {:body {:data nil
-             :success false
-             :message "Bad data received."}})
-    (let [repos (:repos (:params req))]
-      (response/ok
-       {:body {:data (get-update-repos repos)
-               :success true
-               :message "success"}}))))
+     {}))))
 
 (defn api-routes []
   [ ""

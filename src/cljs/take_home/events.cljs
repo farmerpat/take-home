@@ -21,16 +21,26 @@
    db))
 
 (rf/reg-event-db
+ :repo-refresh-success
+ (fn
+   [db [_ res]]
+   ;; INSTEAD, NEED TO SEE if the new dates are more recent than the existing ones
+   ;; and if they are, update it to new release notes, seen false, selected false
+   ;; I think re-frame will take care of the rest.
+   (js/console.log "REPO-REFRESH-SUCCESS")
+   (clj->js (println res))))
+
+(rf/reg-event-db
  :repo-search-success
  (fn
    [db [_ res]]
    (if (every? #(not (= (:name %) (get res "name"))) (:repos db))
      (update-in db [:repos] conj {:release-notes (get res "release-notes")
-                                :release-date (tfc/from-string (get res "release-date"))
-                                :owner (get res "owner")
-                                :name (get res "name")
-                                :seen false
-                                :selected-for-detail-view false})
+                                  :release-date (tfc/from-string (get res "release-date"))
+                                  :owner (get res "owner")
+                                  :name (get res "name")
+                                  :seen false
+                                  :selected-for-detail-view false})
      db)))
 
 (rf/reg-event-db
@@ -49,6 +59,24 @@
                               :seen true)
                              (assoc repo :selected-for-detail-view false)))
                          (:repos db)))))
+
+(rf/reg-event-fx
+ :refresh-repos
+ (fn
+   [{:keys [db]} _]
+   (let [repos (:repos db)]
+     (js/console.log "REFRESH REPOS!")
+     (clj->js (println repos))
+     {:http-xhrio {:method :get
+                   :uri "/api/repos/release"
+                   ;; TODO
+                   ;; This doesn't look like a list of maps on the back-end...
+                   ;; WHY?
+                   :params repos
+                   :request-format (ajax/json-request-format)
+                   :response-format (ajax/json-response-format {:keywords true})
+                   :on-success [:repo-refresh-success]
+                   :on-failure [:search-failure]}})))
 
 (rf/reg-event-fx
  :submit-search
