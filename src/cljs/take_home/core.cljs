@@ -37,7 +37,9 @@
   (let [formatter (tf/formatter "yyyy-MM-dd HH:mm")]
     (tf/unparse formatter t)))
 
+;; TODO
 ;; Fixed by dereferencing subscription outside of let...?
+;; Find out why.
 (defn repo-list []
   (let [repos (rf/subscribe [:repo-list])]
     (fn []
@@ -54,7 +56,7 @@
                   [:div {:class class
                          :on-click (fn [e]
                                      (.preventDefault e)
-                                     (rf/dispatch [:repo-view]))}
+                                     (rf/dispatch [:repo-view (:name repo)]))}
                    [:div {:class "repo_name_container"}
                     (str (:owner repo) "/" (:name repo))]
                    [:div {:class "repo_time_container"}
@@ -66,6 +68,16 @@
                                      (rf/dispatch [:repo-remove (:name repo)]))} "X"]]))
              @repos)]])))
 
+(defn repo-details-container []
+  (let [repos (rf/subscribe [:repo-list])]
+    (fn []
+      (let [matches (filter #(:selected-for-detail-view %) @repos)
+            release-notes (:release-notes (first matches))]
+        [:div {:class "repos_detail_container"}
+         [repo-list]
+         [:div#repo_release_notes_container
+          {:dangerouslySetInnerHTML {:__html (md->html release-notes)}}]]))))
+
 (defn home-page []
   [:section.section>div.container>div.content
    [:div#repo_search_refresh_container
@@ -73,13 +85,8 @@
      [:form#repo_search_form
       [:label {:for "repo_input"} "Repo:"]
       [text-input]
-      [repo-add-button]
-      ]]
-    ]
-
-   [:div {:class "repos_detail_container"}
-    [repo-list]
-    [:div.repo_release_notes_container]]])
+      [repo-add-button]]]]
+   [repo-details-container]])
 
 ;; -------------------------
 ;; Initialize app

@@ -24,11 +24,14 @@
  :repo-search-success
  (fn
    [db [_ res]]
-   (update-in db [:repos] conj {:release-notes (get res "release-notes")
+   (if (every? #(not (= (:name %) (get res "name"))) (:repos db))
+     (update-in db [:repos] conj {:release-notes (get res "release-notes")
                                 :release-date (tfc/from-string (get res "release-date"))
                                 :owner (get res "owner")
                                 :name (get res "name")
-                                :seen false})))
+                                :seen false
+                                :selected-for-detail-view false})
+     db)))
 
 (rf/reg-event-db
  :repo-remove
@@ -38,8 +41,14 @@
 
 (rf/reg-event-db
  :repo-view
- (fn [db [_ e]]
-   (js/console.log "REPO VIEW REQUESTED")))
+ (fn [db [_ repo-name]]
+   (assoc db :repos (map (fn [repo]
+                           (if (= (:name repo) repo-name)
+                             (assoc
+                              (assoc repo :selected-for-detail-view true)
+                              :seen true)
+                             (assoc repo :selected-for-detail-view false)))
+                         (:repos db)))))
 
 (rf/reg-event-fx
  :submit-search
