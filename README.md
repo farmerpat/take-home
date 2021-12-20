@@ -1,8 +1,10 @@
 # take-home
 
-generated using Luminus version "4.27"
+A luminus/re-frame app generated like this:
 
-FIXME
+```bash
+$ lein new lumimous the-app-name +re-frame
+```
 
 ## Prerequisites
 
@@ -21,7 +23,3 @@ Also, npm.
 
 ## Note
 Built and tested using nvm and node v17.3.0 and npm 0.39.1
-
-## License
-
-Copyright © 2021 FIXME
