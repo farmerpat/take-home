@@ -1,6 +1,8 @@
 (ns take-home.core
   (:require
     [day8.re-frame.http-fx]
+    [cljs-time.core :as tc]
+    [cljs-time.format :as tf]
     [reagent.dom :as rdom]
     [reagent.core :as r]
     [re-frame.core :as rf]
@@ -17,30 +19,66 @@
 (def repo-name (r/atom ""))
 
 (defn text-input []
-  [:div.repo-input
-   [:label "Repo:"]
-   [:input {:type "text"
-            :value @repo-name
-            :on-change #(reset! repo-name (.-value (.-target %)))
-            :placeholder "Repo"}]
-   [:button
-    {:on-click (fn [e]
-                 (.preventDefault e)
-                 (rf/dispatch [:submit-search @repo-name]))}
-    "Search"]])
+  [:input {:id "repo_input"
+           :type "text"
+           :value @repo-name
+           :on-change #(reset! repo-name (.-value (.-target %)))
+           :placeholder "Repo"}])
+
+(defn repo-add-button []
+  [:button
+   {:id "repo_search_submit"
+    :on-click (fn [e]
+                (.preventDefault e)
+                (rf/dispatch [:submit-search @repo-name]))}
+   "Add"])
+
+(defn format-time [t]
+  (let [formatter (tf/formatter "yyyy-MM-dd HH:mm")]
+    (tf/unparse formatter t)))
 
 ;; Fixed by dereferencing subscription outside of let...?
 (defn repo-list []
   (let [repos (rf/subscribe [:repo-list])]
     (fn []
-      [:div
+      [:div {:id "repos_container"}
        [:h1 "Repo List"]
-       (into [:ul] (map #(vector :li (str (:owner %) "/" (:name %))) @repos))])))
+       [:div {:id "repos_list"}
+        (map (fn [repo]
+               (let [class (if (:seen repo) "repo_entry" "repo_entry unseen")
+                     release-date (format-time (:release-date repo))]
+                 ;; TODO
+                 ;; make a view that generates this madness.
+                 [:div {:class "repo_entry_container"}
+                  [:div {:class class
+                         :on-click (fn [e]
+                                     (.preventDefault e)
+                                     (rf/dispatch [:repo-view]))}
+                   [:div {:class "repo_name_container"}
+                    (str (:owner repo) "/" (:name repo))]
+                   [:div {:class "repo_time_container"}
+                    [:div {:class "repo_time"} release-date]]
+                   ]
+                  [:div {:class "repo_remove_container"
+                         :on-click (fn [e]
+                                     (.preventDefault e)
+                                     (rf/dispatch [:repo-remove]))} "X"]]))
+             @repos)]])))
 
 (defn home-page []
   [:section.section>div.container>div.content
-   [text-input]
-   [repo-list]])
+   [:div#repo_search_refresh_container
+    [:div#repo_search_form_container
+     [:form#repo_search_form
+      [:label {:for "repo_input"} "Repo:"]
+      [text-input]
+      [repo-add-button]
+      ]]
+    ]
+
+   [:div {:class "repos_detail_container"}
+    [repo-list]
+    [:div.repo_release_notes_container]]])
 
 ;; -------------------------
 ;; Initialize app

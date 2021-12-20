@@ -30,6 +30,16 @@
                                 :name (get res "name")
                                 :seen false})))
 
+(rf/reg-event-db
+ :repo-remove
+ (fn [db [_ e]]
+   (js/console.log "REPO REMOVE REQUESTED")))
+
+(rf/reg-event-db
+ :repo-view
+ (fn [db [_ e]]
+   (js/console.log "REPO VIEW REQUESTED")))
+
 (rf/reg-event-fx
  :submit-search
  (fn

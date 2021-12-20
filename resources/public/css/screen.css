@@ -33,3 +33,86 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.content {
+    display: flex;
+    flex-direction: column;
+}
+
+#repo_search_refresh_container {
+    display: flex;
+    margin-top: 5%;
+    margin-left: 15%;
+}
+
+#repo_search_form_container {
+    width: 100%;
+}
+
+#repo_refresh_container {
+    width: 50%;
+}
+
+#repos_container {
+    width: 50%;
+    margin-top: 5%;
+    margin-right: 2%;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid black;
+}
+
+#repos_detail_container {
+    display: flex;
+    min-height: 1000px;
+}
+
+#repo_release_notes_container {
+    width: 50%;
+    margin-top: 5%;
+    border: 1px solid black;
+    padding: 1%;
+}
+
+.repo_entry_container {
+    display: flex;
+}
+
+.repo_entry {
+    display: table;
+    border: 1px solid black;
+    padding: 1%;
+    margin-top: 2%;
+    margin-left: 2%;
+    width: 90%;
+}
+
+.repo_name_container {
+    width: 50%;
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.repo_time_and_action_container {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.repo_time_container {
+    width: 90%;
+}
+
+.repo_remove_container {
+    cursor: pointer;
+    margin-left: 3%;
+    margin-top: 3%;
+    margin-bottom: 3%;
+}
+
+.unseen {
+    background-color: lightgreen;
+}
+
+.selected_repo {
+    border: 2px solid black;
+}
+
