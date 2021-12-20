@@ -16,6 +16,7 @@
     [clojure.string :as string])
   (:import goog.History))
 
+;; This seems gross?
 (def repo-name (r/atom ""))
 
 (defn text-input []
@@ -30,12 +31,39 @@
    {:id "repo_search_submit"
     :on-click (fn [e]
                 (.preventDefault e)
-                (rf/dispatch [:submit-search @repo-name]))}
+                (rf/dispatch [:submit-search @repo-name])
+                (reset! repo-name ""))}
    "Add"])
 
 (defn format-time [t]
   (let [formatter (tf/formatter "yyyy-MM-dd HH:mm")]
     (tf/unparse formatter t)))
+
+(defn repo-entry-container [class name owner release-date]
+  [:div {:id name
+         :class "repo_entry_container"}
+   [:div {:class class
+          :on-click (fn [e]
+                      (.preventDefault e)
+                      (rf/dispatch [:repo-view name]))}
+    [:div {:class "repo_name_container"}
+     (str owner "/" name)]
+    [:div {:class "repo_time_container"}
+     [:div {:class "repo_time"} release-date]]]
+   [:div {:class "repo_remove_container"
+          :on-click (fn [e]
+                      (.preventDefault e)
+                      (rf/dispatch [:repo-remove name]))} "X"]])
+
+(defn get-repo-container-class [repo]
+  (str
+   "repo_entry"
+   (if (:selected-for-detail-view repo)
+     " selected_repo"
+     "")
+   (if (not (:seen repo))
+     " unseen"
+     "")))
 
 ;; TODO
 ;; Fixed by dereferencing subscription outside of let...?
@@ -48,24 +76,9 @@
         [:h1 "Repo List"]]
        [:div {:id "repos_list"}
         (map (fn [repo]
-               (let [class (if (:seen repo) "repo_entry" "repo_entry unseen")
-                     release-date (format-time (:release-date repo))]
-                 ;; TODO
-                 ;; make a view that generates this madness.
-                 [:div {:class "repo_entry_container"}
-                  [:div {:class class
-                         :on-click (fn [e]
-                                     (.preventDefault e)
-                                     (rf/dispatch [:repo-view (:name repo)]))}
-                   [:div {:class "repo_name_container"}
-                    (str (:owner repo) "/" (:name repo))]
-                   [:div {:class "repo_time_container"}
-                    [:div {:class "repo_time"} release-date]]
-                   ]
-                  [:div {:class "repo_remove_container"
-                         :on-click (fn [e]
-                                     (.preventDefault e)
-                                     (rf/dispatch [:repo-remove (:name repo)]))} "X"]]))
+               (let [class (get-repo-container-class repo)
+                     release-date (:release-date repo)]
+                 (repo-entry-container class (:name repo)(:owner repo) (format-time release-date))))
              @repos)]])))
 
 (defn repo-details-container []

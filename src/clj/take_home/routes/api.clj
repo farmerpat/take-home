@@ -1,5 +1,6 @@
 (ns take-home.routes.api
   (:require
+   [clj-time.core :as t]
    [take-home.layout :as layout]
    [take-home.git-get :as gg]
    [take-home.middleware :as middleware]
@@ -57,9 +58,14 @@
           (if (not (contains-all? search-result [:owner :name]))
             (response/ok {})
             (let [release (gg/get-latest-release search-result)]
-              (response/ok
-               (merge (transform-value md-to-html-string :release-notes release)
-                      search-result)))))))))
+              (if (nil? release)
+                (response/ok
+                 (merge {:release-notes "None Found"
+                         :release-date (str (t/date-time 1970 1 1))}
+                        search-result))
+                (response/ok
+                 (merge (transform-value md-to-html-string :release-notes release)
+                        search-result))))))))))
 
 (defn repo-search [req]
   (if (not (valid-request? req :repo-name))
@@ -73,7 +79,6 @@
           (response/ok search-result))))))
 
 (defn repo-release-earliest [req]
-  (println "I R repo-release-earliest")
   (if (not (and (valid-request? req :repo)
                 (contains-all? (:repo (:params req)) [:name :owner])))
 

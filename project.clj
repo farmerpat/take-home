@@ -7,6 +7,7 @@
                  [clj-http "0.7.7"]
                  [cljs-ajax "0.8.4"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
+                 [clj-time "0.15.2"]
                  [clojure.java-time "0.3.3"]
                  [com.cognitect/transit-clj "1.0.324"]
                  [com.cognitect/transit-cljs "0.8.269"]

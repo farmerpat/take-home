@@ -19,6 +19,8 @@ Also, npm.
     lein run
     shadow-cljs watch app
 
+## Note
+Built and tested using nvm and node v17.3.0 and npm 0.39.1
 
 ## License
 
