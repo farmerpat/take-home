@@ -15,6 +15,7 @@ Also, npm.
 ## Running
 
     npm install -g shadow-cljs
+    npm install
     lein run
     shadow-cljs watch app
 
