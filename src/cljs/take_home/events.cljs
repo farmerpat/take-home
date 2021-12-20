@@ -32,8 +32,9 @@
 
 (rf/reg-event-db
  :repo-remove
- (fn [db [_ e]]
-   (js/console.log "REPO REMOVE REQUESTED")))
+ (fn [db [_ repo-name]]
+   (let [repos (:repos db)]
+     (assoc-in db [:repos] (filter #(not (= (:name %) repo-name)) repos)))))
 
 (rf/reg-event-db
  :repo-view

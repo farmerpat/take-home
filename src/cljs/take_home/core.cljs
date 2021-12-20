@@ -42,7 +42,8 @@
   (let [repos (rf/subscribe [:repo-list])]
     (fn []
       [:div {:id "repos_container"}
-       [:h1 "Repo List"]
+       [:div#repo_list_header
+        [:h1 "Repo List"]]
        [:div {:id "repos_list"}
         (map (fn [repo]
                (let [class (if (:seen repo) "repo_entry" "repo_entry unseen")
@@ -62,7 +63,7 @@
                   [:div {:class "repo_remove_container"
                          :on-click (fn [e]
                                      (.preventDefault e)
-                                     (rf/dispatch [:repo-remove]))} "X"]]))
+                                     (rf/dispatch [:repo-remove (:name repo)]))} "X"]]))
              @repos)]])))
 
 (defn home-page []
