@@ -61,7 +61,7 @@ body {
     border: 1px solid black;
 }
 
-#repos_detail_container {
+.repos_detail_container {
     display: flex;
     min-height: 1000px;
 }
@@ -92,12 +92,12 @@ body {
     vertical-align: middle;
 }
 
-.repo_time_and_action_container {
+.repo_time_container {
     display: table-cell;
     vertical-align: middle;
 }
 
-.repo_time_container {
+.repo_time {
     width: 90%;
 }
 
@@ -108,10 +108,16 @@ body {
     margin-bottom: 3%;
 }
 
-.new_repo {
+.unseen {
     background-color: lightgreen;
 }
 
 .selected_repo {
     border: 2px solid black;
+}
+
+#repo_list_header {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5%;
 }
