@@ -24,16 +24,29 @@
  :repo-refresh-success
  (fn
    [db [_ res]]
-   ;; INSTEAD, NEED TO SEE if the new dates are more recent than the existing ones
-   ;; and if they are, update it to new release notes, seen false, selected false
-   ;; I think re-frame will take care of the rest.
-   (js/console.log "REPO-REFRESH-SUCCESS")
-   (clj->js (println res))))
+   (let [releases (get res "releases")
+         repos (:repos db)]
+     (assoc db :repos
+            (map
+             (fn [current-repo]
+               (let [matching-release
+                     (first (filter #(= (get % "name") (:name current-repo)) releases))]
+                 (if (nil? matching-release)
+                   current-repo
+                   (let [release-time (tfc/from-string (get matching-release "release-date"))]
+                     (if (> release-time (:release-date current-repo))
+                       {:name (get matching-release "name")
+                        :owner (get matching-release "owner")
+                        :release-date release-time
+                        :release-notes (get matching-release "release-notes")
+                        :seen false
+                        :selected-for-detail-view false}
+                       current-repo)))))
+             repos)))))
 
 (rf/reg-event-db
  :repo-search-success
- (fn
-   [db [_ res]]
+ (fn [db [_ res]]
    (if (every? #(not (= (:name %) (get res "name"))) (:repos db))
      (update-in db [:repos] conj {:release-notes (get res "release-notes")
                                   :release-date (tfc/from-string (get res "release-date"))
@@ -62,11 +75,8 @@
 
 (rf/reg-event-fx
  :refresh-repos
- (fn
-   [{:keys [db]} _]
+ (fn [{:keys [db]} _]
    (let [repos (:repos db)]
-     (js/console.log "REFRESH REPOS!")
-     (clj->js (println repos))
      {:http-xhrio {:method :get
                    :uri "/api/repos/release"
                    ;; TODO
@@ -79,9 +89,19 @@
                    :on-failure [:search-failure]}})))
 
 (rf/reg-event-fx
+ :submit-old-search
+ (fn [{:keys [db]} [_ repo-name]]
+   {:http-xhrio {:method :get
+                 :uri "/api/repo/searchfullold"
+                 :params {:repo-name repo-name}
+                 :request-format (ajax/json-request-format)
+                 :response-format (ajax/json-response-format {:keywords true})
+                 :on-success [:repo-search-success]
+                 :on-failure [:search-failure]}}))
+
+(rf/reg-event-fx
  :submit-search
- (fn
-   [{:keys [db]} [_ repo-name]]
+ (fn [{:keys [db]} [_ repo-name]]
    {:http-xhrio {:method :get
                  :uri "/api/repo/searchfull"
                  :params {:repo-name repo-name}

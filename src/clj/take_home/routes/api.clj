@@ -49,6 +49,24 @@
           (contains-all? (:params req) ks)
           (contains? (:params req) ks)))))
 
+(defn repo-old-search-full [req]
+  (if (not (valid-request? req :repo-name))
+    (response/ok {})
+    (let [repo-name (:repo-name (:params req))]
+      (if (gg/repo-exists? repo-name)
+        (let [search-result (gg/search-repos-and-get-top-hit repo-name)]
+          (if (not (contains-all? search-result [:owner :name]))
+            (response/ok {})
+            (let [releases (gg/get-releases search-result)]
+              (if (nil? releases)
+                (response/ok {})
+                (let [oldest_release (last releases)]
+                  (response/ok
+                   (merge (->> {:release-date (:published_at oldest_release)
+                                :release-notes (:body oldest_release)}
+                               (transform-value md-to-html-string :release-notes))
+                          search-result)))))))))))
+
 (defn repo-search-full [req]
   (if (not (valid-request? req :repo-name))
     (response/ok {})
@@ -119,22 +137,37 @@
   (map (fn [repo]
          (merge {:name (:name repo), :owner (:owner repo)}
                 (->> (gg/get-latest-release repo)
-                     (transform-value md-to-html-string :release-notes)
-                     ;;keys-to-js-keys
-                     )))
-       (into [] (map (fn [[k v]] v) repos))))
+                     (transform-value md-to-html-string :release-notes))))
+       repos))
+
+(defn map-of-seqs->seq-of-maps [am]
+  (map
+   (fn [n]
+     {:name (nth (:name am) n)
+      :owner (nth (:owner am) n)
+      :release-date (nth (:release-date am) n)
+      :release-notes (nth (:release-notes am) n)
+      :seen (nth (:seen am) n)
+      :selected-for-detail-view
+      (nth (:selected-for-detail-view am) n)})
+   (range (count (:name am)))))
 
 (defn repos-release [req]
-  (let [repos (:params req)]
+  ;; for whatever reason, the data is getting here like this:
+  ;; {:key1 [value_from_map0 value_from_map1] ...}
+  ;; instead of like this:
+  ;; [{:key1 value_from_map1}, {:key1 value_from_map2}]
+  (let [repos (map-of-seqs->seq-of-maps (:params req))]
     (let [releases (get-update-repos repos)]
-    (response/ok
-     {}))))
+      (response/ok
+       {:releases releases}))))
 
 (defn api-routes []
   [ ""
    {:middleware [middleware/wrap-formats]}
    ["/api/repo/search" {:get repo-search}]
    ["/api/repo/searchfull" {:get repo-search-full}]
+   ["/api/repo/searchfullold" {:get repo-old-search-full}]
    ["/api/repo/release/latest" {:get repo-release-latest}]
    ["/api/repo/release/earliest" {:get repo-release-earliest}]
    ["/api/repos/release" {:get repos-release}]])

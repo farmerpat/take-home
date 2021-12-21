@@ -34,6 +34,15 @@
                 (rf/dispatch [:refresh-repos]))}
    "Refresh"])
 
+(defn repo-add-old []
+  [:button
+   {:id "repo_get_older_release"
+    :on-click (fn [e]
+                (.preventDefault e)
+                (rf/dispatch [:submit-old-search @repo-name])
+                (reset! repo-name ""))}
+   "Add Old"])
+
 (defn repo-add-button []
   [:button
    {:id "repo_search_submit"
@@ -106,10 +115,10 @@
      [:form#repo_search_form
       [:label {:for "repo_input"} "Repo:"]
       [text-input]
-      [repo-add-button]]]
+      [repo-add-button]
+      [repo-add-old]]]
     [:div#repo_refresh_container
-     ;;[refresh-button]
-     ]]
+     [refresh-button]]]
    [repo-details-container]])
 
 ;; -------------------------
