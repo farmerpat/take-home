@@ -153,14 +153,18 @@
    (range (count (:name am)))))
 
 (defn repos-release [req]
-  ;; for whatever reason, the data is getting here like this:
-  ;; {:key1 [value_from_map0 value_from_map1] ...}
-  ;; instead of like this:
-  ;; [{:key1 value_from_map1}, {:key1 value_from_map2}]
-  (let [repos (map-of-seqs->seq-of-maps (:params req))]
-    (let [releases (get-update-repos repos)]
-      (response/ok
-       {:releases releases}))))
+  ;; If there is only one
+  (if (string? (:name (:params req)))
+    (response/ok
+     {:releases (get-update-repos [(:params req)])})
+    ;; for whatever reason, the data is getting here like this:
+    ;; {:key1 [value_from_map0 value_from_map1] ...}
+    ;; instead of like this:
+    ;; [{:key1 value_from_map1}, {:key1 value_from_map2}]
+    (let [repos (map-of-seqs->seq-of-maps (:params req))]
+      (let [releases (get-update-repos repos)]
+        (response/ok
+         {:releases releases})))))
 
 (defn api-routes []
   [ ""
